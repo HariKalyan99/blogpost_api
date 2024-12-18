@@ -1,4 +1,5 @@
 const config = require("../config/config");
+const { AppError } = require("../middlewares/auth.middleware");
 
 
 const sendErrorDev = (error, response) => {
@@ -33,7 +34,13 @@ const sendErrorProd = (error, response) => {
 } 
 
 const globalErrorHandler = (error, request, response, next) => {
-
+    if(error.name === 'SequelizeValidationError'){
+        error = next(new AppError(error.errors[0].message, 400));
+    }
+    if(error.name === 'SequelizeUniqueConstraintError'){
+        error = next(new AppError(error.errors[0].message, 400));
+    }
+    // these errors above are meant for the validation and constrains in the sql level
     if(config.NODE_ENV === "development"){
         return sendErrorDev(error, response)
     }
